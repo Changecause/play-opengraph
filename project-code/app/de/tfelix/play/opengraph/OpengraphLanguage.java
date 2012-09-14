@@ -1,4 +1,4 @@
-package de.tfelix.play.opengraph.actions;
+package de.tfelix.play.opengraph;
 
 import play.Logger;
 import play.i18n.Lang;
@@ -30,6 +30,8 @@ public class OpengraphLanguage {
 	 */
 	public static Lang getLanguage() {
 		Context ctx = Http.Context.current();
+		
+		// See if the language was already parsed and cached for this request.
 		if(ctx.args.containsKey(LANGUAGE_KEY)) {
 			return (Lang) ctx.args.get(LANGUAGE_KEY);
 		}
@@ -54,11 +56,11 @@ public class OpengraphLanguage {
 			// Stupid workaround. play.i18n.defaultLang() returns a
 			// play.api.i18n.Lang object, but a play.i18n.Lang is needed.
 			language = Lang.forCode(Lang.defaultLang().language());
-			Logger.debug("Test: " + language.code());
 		} else {
 			language = Lang.forCode(langCode);
 		}
 
+		Logger.debug("Facebook language detected: "+language.toString());
 		ctx.args.put(LANGUAGE_KEY, language);
 		return language;
 	}

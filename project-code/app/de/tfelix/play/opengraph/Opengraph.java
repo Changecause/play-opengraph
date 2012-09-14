@@ -4,6 +4,8 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
@@ -42,7 +44,8 @@ public class Opengraph {
 	 * pages regardless of a key can be added to this list. They will be
 	 * delivered every time a collection of tags is requested.
 	 */
-	private static Set<MetaTag> permanentMetaTags = new HashSet<MetaTag>();
+	private static HashSet<MetaTag> permanentMetaTags
+		= new HashSet<MetaTag>();
 
 	/**
 	 * List of tags which are required by the Open Graph protocol.
@@ -59,13 +62,31 @@ public class Opengraph {
 		reqSet.add("fb:app_id");
 		REQUIERED_TAGS = Collections.unmodifiableSet(reqSet);
 	}
+	
+	/**
+	 * Checks if the MetaTag is a alternate language indicator, if so
+	 * it will be added. And a boolean value returned indicating this.
+	 * @param tag
+	 * @return
+	 */
+	private static boolean checkLanguageMeta(MetaTag tag) {
+		if(tag.getProperty().equals("og:locale:alternate")) {
+			return true;
+		}
+		return false;
+	}
 
 	/**
 	 * Permanent tags will be included in ALL requests of the meta tags.
+	 * Adding twice the came tag will not work. A tag is considered equal
+	 * if its property and its value are identical.
 	 * 
 	 * @param tag
 	 */
 	public static void insertPermanentTag(MetaTag tag) {
+		if(tag == null) {
+			throw new IllegalArgumentException("tag can not be null");
+		}
 		permanentMetaTags.add(tag);
 	}
 
@@ -77,7 +98,14 @@ public class Opengraph {
 	 * @param page
 	 * @param tag
 	 */
-	public static void insertTag(String page, MetaTag tag) {
+	public static void insertTag(String page, MetaTag tag) {		
+		if(page == null) {
+			throw new IllegalArgumentException("Page can not be null.");
+		}
+		if(tag == null) {
+			throw new IllegalArgumentException("Metatag can not be null.");
+		}
+		
 		if (metaTagsCache.get(page) == null) {
 			// Empty list. Create a new.
 			metaTagsCache.put(page, new HashSet<MetaTag>());
@@ -123,10 +151,15 @@ public class Opengraph {
 	 * @return
 	 */
 	public static Iterable<MetaTag> getTags(String page) {
+		if(page == null) {
+			throw new IllegalArgumentException("Page can not be null.");
+		}
 		Logger.debug("Get tags for key: "+page);
-		HashSet<MetaTag> tmp = new HashSet<MetaTag>();
-		tmp.addAll(permanentMetaTags);
 		
+		HashSet<MetaTag> tmp = new HashSet<MetaTag>();
+		
+		//tmp.addAll(permanentMetaTags);
+
 		// Iterate over all other tags and try to find one which matches the given key.
 		// The problem is the Framework does not give us the current path without parameter.
 		// So we have to iterate over and try to match.
@@ -140,14 +173,13 @@ public class Opengraph {
 	        }
 	    }
 		
-		if(foundTags == null) {
+		if(foundTags != null) {
 			// No Matching tags found. Add nothing.
-			return Collections.unmodifiableSet(tmp);	
+			tmp.addAll(foundTags);
 		}
 		
-		foundTags.addAll(tmp);
-
-		return Collections.unmodifiableSet(foundTags);
+		tmp.addAll(permanentMetaTags);
+		return Collections.unmodifiableSet(tmp);
 	}
 	
 	/**

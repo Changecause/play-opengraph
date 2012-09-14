@@ -1,17 +1,33 @@
 package de.tfelix.play.opengraph;
 
 public class MetaTag {
+	
 	private String property;
 	private MetaTagValue content;
+	
+	/**
+	 * Performs error checking and should be called from the various ctors.
+	 * 
+	 * @param property
+	 * @param content
+	 */
+	private void initialize(String property, MetaTagValue content) {
+		if(property == null) {
+			throw new NullPointerException("Property can not be null.");
+		}
+		if(content == null) {
+			throw new NullPointerException("Content can not be null.");
+		}
+		this.property = property;
+		this.content = content;
+	}
 
 	public MetaTag(String property, String content) {
-		this.property = property;
-		this.content = new MetaTagValue(content);
+		initialize(property, new MetaTagValue(content));
 	}
 	
 	public MetaTag(String property, MetaTagValue content) {
-		this.property = property;
-		this.content = content;		
+		initialize(property, content);
 	}
 	
 
@@ -35,7 +51,7 @@ public class MetaTag {
 		if(o == null || !(o instanceof MetaTag)) return false;
 		
 		MetaTag rhs = (MetaTag) o;
-		return property.equals(rhs.property);
+		return property.equals(rhs.property) && content.equals(rhs.content);
 	}
 	
 	/**
@@ -43,7 +59,7 @@ public class MetaTag {
 	 */
 	@Override
 	public int hashCode() {
-		return (property != null ? property.hashCode() : 0);
+		return property.hashCode() + content.hashCode();
 	}
 
 	/**
