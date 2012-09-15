@@ -15,9 +15,6 @@ import play.Logger;
 /**
  * Saves sets of MetaTags indexed via a String key. The tag collection can later
  * be requested and printed to the desired set of meta HTML tags.
- * 
- * @author Thomas Felix <thomas.felix@tfelix.de>
- * 
  */
 public class Opengraph {
 	
@@ -34,6 +31,12 @@ public class Opengraph {
 	 * requested.
 	 */
 	private static final String DEFAULT_KEY = "default";
+	
+	private static final HashSet<String> ALLOWED_DOUBLE_TAGS
+		= new HashSet<String>();
+	static {
+		ALLOWED_DOUBLE_TAGS.add("og:locale:alternate");
+	}
 
 	private static Map<String, HashSet<MetaTag>> metaTagsCache 
 		= new HashMap<String, HashSet<MetaTag>>();
@@ -46,35 +49,6 @@ public class Opengraph {
 	 */
 	private static HashSet<MetaTag> permanentMetaTags
 		= new HashSet<MetaTag>();
-
-	/**
-	 * List of tags which are required by the Open Graph protocol.
-	 */
-	@SuppressWarnings("unused")
-	private static final Set<String> REQUIERED_TAGS;
-	static {
-		HashSet<String> reqSet = new HashSet<String>();
-		reqSet.add("og:title");
-		reqSet.add("og:type");
-		reqSet.add("og:image");
-		reqSet.add("og:url");
-		reqSet.add("og:site_name");
-		reqSet.add("fb:app_id");
-		REQUIERED_TAGS = Collections.unmodifiableSet(reqSet);
-	}
-	
-	/**
-	 * Checks if the MetaTag is a alternate language indicator, if so
-	 * it will be added. And a boolean value returned indicating this.
-	 * @param tag
-	 * @return
-	 */
-	private static boolean checkLanguageMeta(MetaTag tag) {
-		if(tag.getProperty().equals("og:locale:alternate")) {
-			return true;
-		}
-		return false;
-	}
 
 	/**
 	 * Permanent tags will be included in ALL requests of the meta tags.
@@ -156,9 +130,8 @@ public class Opengraph {
 		}
 		Logger.debug("Get tags for key: "+page);
 		
-		HashSet<MetaTag> tmp = new HashSet<MetaTag>();
-		
-		//tmp.addAll(permanentMetaTags);
+		HashSet<String> hits = new HashSet<String>();
+		List<MetaTag> tmp = new LinkedList<MetaTag>();
 
 		// Iterate over all other tags and try to find one which matches the given key.
 		// The problem is the Framework does not give us the current path without parameter.
@@ -173,26 +146,29 @@ public class Opengraph {
 	        }
 	    }
 		
+		Logger.info(OpengraphLanguage.getLanguage().toString());
+		
 		if(foundTags != null) {
-			// No Matching tags found. Add nothing.
+			// Add all of the found matching tags.
 			tmp.addAll(foundTags);
+			for(MetaTag metaTag : foundTags) {
+				hits.add(metaTag.getProperty());
+			}
 		}
 		
-		tmp.addAll(permanentMetaTags);
-		return Collections.unmodifiableSet(tmp);
+		for (MetaTag metaTag : permanentMetaTags) {
+			// If this meta tag was already included in the result, do not add it
+			// again UNTIL it is a tag for which double inclusion is allowed.
+			if(hits.contains(metaTag.getProperty()) && !isMultiTag(metaTag)) {
+				continue;
+			}
+			tmp.add(metaTag);
+		}
+		
+		return Collections.unmodifiableList(tmp);
 	}
 	
-	/**
-	 * Checks if all metatags which Facebook requires are set in the given output.
-	 * If not issue a log entry as a notice.
-	 * 
-	 * @TODO Not yet implemented because of speed concerns.
-	 * 
-	 * @param tags
-	 * @return
-	 */
-	@SuppressWarnings("unused")
-	private boolean containsAllNeededKeys(Set<MetaTag> tags) {
-		return true;
+	private static boolean isMultiTag(MetaTag metaTag) {
+		return ALLOWED_DOUBLE_TAGS.contains(metaTag.getProperty());
 	}
 }

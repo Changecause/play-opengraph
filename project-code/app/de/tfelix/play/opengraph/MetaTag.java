@@ -12,13 +12,13 @@ public class MetaTag {
 	 * @param content
 	 */
 	private void initialize(String property, MetaTagValue content) {
-		if(property == null) {
-			throw new NullPointerException("Property can not be null.");
+		if(property == null || property.isEmpty()) {
+			throw new IllegalArgumentException("Property can not be null or empty.");
 		}
 		if(content == null) {
-			throw new NullPointerException("Content can not be null.");
+			throw new IllegalArgumentException("Content can not be null.");
 		}
-		this.property = property;
+		this.property = property.toLowerCase();
 		this.content = content;
 	}
 

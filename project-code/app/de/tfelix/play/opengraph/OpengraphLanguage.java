@@ -1,5 +1,10 @@
 package de.tfelix.play.opengraph;
 
+import java.util.Arrays;
+import java.util.Map;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
 import play.Logger;
 import play.i18n.Lang;
 import play.mvc.Http.Context;
@@ -13,14 +18,13 @@ import play.mvc.Http;
  * is the place where the supported facebook languages are stored too. So if new
  * languages are added later, the only changes which must be made are inside the
  * scala template.
- * 
- * @author Thomas Felix <thomas.felix@tfelix.de>
- * 
  */
 public class OpengraphLanguage {
 
 	static final private String LANGUAGE_KEY = "facebook-lang";
 
+	static final private Pattern LANGUAGE_REGEX = Pattern.compile("\\?fb_locale=(\\w{2}_\\w{2})");
+	
 	/**
 	 * Returns the Lang object which is requested by Facebook. Either the one
 	 * requested by Facebook is delivered or the one which is in the language
@@ -31,12 +35,34 @@ public class OpengraphLanguage {
 	public static Lang getLanguage() {
 		Context ctx = Http.Context.current();
 		
+		// DEBUG: Print the Header.
+		//Logger.info("Path: "+ctx.request().path());
+		//Logger.info("URI: "+ctx.request().uri());
+		
+		for(Map.Entry<String, String[]> entry : ctx.request().headers().entrySet()) {
+			Logger.info(entry.getKey()+": "+Arrays.asList(entry.getValue()).toString());			
+		}
+
+		//Logger.info("Facebook Header: "+ctx.request().getHeader("X-Facebook-Locale"));
+		
 		// See if the language was already parsed and cached for this request.
 		if(ctx.args.containsKey(LANGUAGE_KEY)) {
+			//Logger.info("Facebook language detected: "+ ctx.args.get(LANGUAGE_KEY));
 			return (Lang) ctx.args.get(LANGUAGE_KEY);
 		}
 		
-		String langCode = ctx.request().getHeader("X-Facebook-Locale");
+		String langCode = ctx.request().getHeader("X-Facebook-Locale");		
+		// If code was not found, try to get it from the URL tag.
+		if(langCode == null || langCode.isEmpty()) {
+			Matcher matcher = LANGUAGE_REGEX.matcher(ctx.request().uri());
+			while(matcher.find()) {
+				String match = matcher.group(1);
+				Logger.info(match);
+				langCode = match;
+				break;
+			}
+		}
+		
 		if (langCode != null && !langCode.isEmpty()) {
 			// Strange behavior of Play i18n framework. If .de message file is
 			// present it works if the browser defaults to de-DE but if I
@@ -49,8 +75,6 @@ public class OpengraphLanguage {
 		
 		// If no explicit language request by Facebook, so give the language
 		// dependent on the browser of the user.
-		//String langCode = (String) Http.Context.current().args
-		//		.get(LANGUAGE_KEY);
 		Lang language;
 		if (langCode == null || langCode.isEmpty()) {
 			// Stupid workaround. play.i18n.defaultLang() returns a
@@ -60,7 +84,7 @@ public class OpengraphLanguage {
 			language = Lang.forCode(langCode);
 		}
 
-		Logger.debug("Facebook language detected: "+language.toString());
+		//Logger.info("Facebook language detected: "+language.toString());
 		ctx.args.put(LANGUAGE_KEY, language);
 		return language;
 	}

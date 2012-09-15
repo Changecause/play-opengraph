@@ -2,15 +2,11 @@ package de.tfelix.play.opengraph;
 
 import play.i18n.Messages;
 
-
 /**
  * Stores a translatable string (translated via the i18n API of Play!
  * Framework). Objects an be added as well to fill in placeholder in the
  * translation string as documented in
- * http://www.playframework.org/documentation/2.0.2/JavaI18N
- * 
- * @author Thomas Felix <thomas.felix@tfelix.de>
- * 
+ * http://www.playframework.org/documentation/2.0.2/JavaI18N 
  */
 public class MetaTagValue {
 
