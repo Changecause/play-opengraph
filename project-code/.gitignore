@@ -4,6 +4,9 @@ project/target
 target
 tmp
 .history
+.project
+.target
+.classpath
 dist
 .settings
 publish-local.bat
