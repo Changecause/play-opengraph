@@ -1,5 +1,3 @@
-Path: @Http.Context.current().request().path()
-URI: @Http.Context.current().request().uri()
-
-@for(tag <- util.Opengraph.getTags(Http.Context.current().request().path())) {@Html(tag.toString())
+@import de.tfelix.play.opengraph._
+@for(tag <- Opengraph.getTags(Http.Context.current().request().path()).iterator()) {@Html(tag.toString())
 }

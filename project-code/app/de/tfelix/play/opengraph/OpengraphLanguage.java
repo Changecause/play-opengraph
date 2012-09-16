@@ -23,7 +23,7 @@ public class OpengraphLanguage {
 
 	static final private String LANGUAGE_KEY = "facebook-lang";
 
-	static final private Pattern LANGUAGE_REGEX = Pattern.compile("\\?fb_locale=(\\w{2}_\\w{2})");
+	static final private Pattern LANGUAGE_REGEX = Pattern.compile("\fb_locale=(\\w{2}_\\w{2})");
 	
 	/**
 	 * Returns the Lang object which is requested by Facebook. Either the one
@@ -39,11 +39,11 @@ public class OpengraphLanguage {
 		//Logger.info("Path: "+ctx.request().path());
 		//Logger.info("URI: "+ctx.request().uri());
 		
-		for(Map.Entry<String, String[]> entry : ctx.request().headers().entrySet()) {
+		/*for(Map.Entry<String, String[]> entry : ctx.request().headers().entrySet()) {
 			Logger.info(entry.getKey()+": "+Arrays.asList(entry.getValue()).toString());			
-		}
+		}*/
 
-		//Logger.info("Facebook Header: "+ctx.request().getHeader("X-Facebook-Locale"));
+		Logger.info("Facebook Header: "+ctx.request().getHeader("X-Facebook-Locale"));
 		
 		// See if the language was already parsed and cached for this request.
 		if(ctx.args.containsKey(LANGUAGE_KEY)) {
@@ -59,10 +59,15 @@ public class OpengraphLanguage {
 				String match = matcher.group(1);
 				Logger.info(match);
 				langCode = match;
+				
+				Logger.info("Facebook Header 2nd: "+langCode);
 				break;
 			}
 		}
 		
+		// If no explicit language request by Facebook, so give the language
+		// dependent on the browser of the user.
+		Lang language;
 		if (langCode != null && !langCode.isEmpty()) {
 			// Strange behavior of Play i18n framework. If .de message file is
 			// present it works if the browser defaults to de-DE but if I
@@ -71,17 +76,15 @@ public class OpengraphLanguage {
 			// codes must be shortened to the primary part as I don't user
 			// country codes in my language files. This may be a bug in play.
 			langCode = langCode.split("_")[0];
-		}
-		
-		// If no explicit language request by Facebook, so give the language
-		// dependent on the browser of the user.
-		Lang language;
-		if (langCode == null || langCode.isEmpty()) {
+			language = Lang.forCode(langCode);
+		} else {
 			// Stupid workaround. play.i18n.defaultLang() returns a
 			// play.api.i18n.Lang object, but a play.i18n.Lang is needed.
-			language = Lang.forCode(Lang.defaultLang().language());
-		} else {
-			language = Lang.forCode(langCode);
+			language = new Lang(Lang.defaultLang());
+			Logger.info("First language: "+language.toString());
+			//language = Lang.preferred(Lang.availables());
+			Logger.info("Second language: "+Lang.preferred(Lang.availables()));
+			//Lang.forCode(Lang.defaultLang().language());
 		}
 
 		//Logger.info("Facebook language detected: "+language.toString());
