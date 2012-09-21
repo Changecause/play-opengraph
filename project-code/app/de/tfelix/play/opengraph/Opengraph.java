@@ -32,11 +32,18 @@ public class Opengraph {
 	 */
 	private static final String DEFAULT_KEY = "default";
 	
+	//private static final 
 	private static final HashSet<String> ALLOWED_DOUBLE_TAGS
 		= new HashSet<String>();
 	static {
 		ALLOWED_DOUBLE_TAGS.add("og:locale:alternate");
 	}
+	
+	/**
+	 * Tag which holds the locale will be saved as a standalone to be replacable
+	 * if a special language is requested from Facebook.
+	 */
+	private static MetaTag localeTag = null;
 
 	private static Map<String, HashSet<MetaTag>> metaTagsCache 
 		= new HashMap<String, HashSet<MetaTag>>();
@@ -61,7 +68,11 @@ public class Opengraph {
 		if(tag == null) {
 			throw new IllegalArgumentException("tag can not be null");
 		}
-		permanentMetaTags.add(tag);
+		if(tag.getProperty().equals("og:locale")) {
+			localeTag = tag;
+		} else {
+			permanentMetaTags.add(tag);
+		}
 	}
 
 	/**
@@ -146,7 +157,17 @@ public class Opengraph {
 	        }
 	    }
 		
-		Logger.info(OpengraphLanguage.getLanguage().toString());
+		// Get the current language and add a locale tag for it.
+		String facebookLanguageCode = OpengraphLanguage.getFacebookRequestCode();
+		if(facebookLanguageCode != null && !facebookLanguageCode.isEmpty()) {
+			// Add this code to the taglist.
+			tmp.add(new MetaTag("og:locale", OpengraphLanguage.getFacebookRequestCode()));
+		} else {
+			// otherwise add the default tag to the list.
+			tmp.add(localeTag);
+		}
+		// Locale is always added.
+		hits.add("og:locale");
 		
 		if(foundTags != null) {
 			// Add all of the found matching tags.

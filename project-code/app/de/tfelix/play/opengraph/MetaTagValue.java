@@ -34,6 +34,8 @@ public class MetaTagValue {
 
 	@Override
 	public String toString() {
+		//Lang language = 
+		
 		if (args == null) {
 			return Messages.get(OpengraphLanguage.getLanguage(), value);
 		} else {
