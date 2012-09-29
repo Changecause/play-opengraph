@@ -6,7 +6,7 @@ The play-opengraph module is a Play! 2.x Framework plugin which makes it easier 
 Installation
 ---------------------------------------------
 
-Since there is no reposity for Play modules this module is (like some others) hosted by github. To include it in your project edit your Build.scala file:
+Since there is no reposity for Play modules this module is (like some others) hosted by github.com as a project specific page. To include it in your project edit your Build.scala file:
 
 Dependency declaration is:
 
@@ -28,11 +28,14 @@ object ApplicationBuild extends Build {
 
 	val main = PlayProject(appName, appVersion, appDependencies, mainLang = JAVA).settings(
 		// Add your own project settings here
-		resolvers += Resolver.url("Opengraph-Module Play Repository", url("http://tfelix.github.com/releases/"))(Resolver.ivyStylePatterns)
+		resolvers += Resolver.url("Opengraph-Module Play Repository", url("http://tfelix.github.com/play-opengraph/releases/"))(Resolver.ivyStylePatterns),
+		checksums := Nil 
 	)
 
 }
 ```
+
+**Notice:** I dont know why, but somehow SBT/Ivy keeps telling that the SHA1 checksum is corrupted adding the setting checksums := Nil works around this problem. Any help why this is the case is appreciated.
 
 Usage
 ---------------------------------------------
