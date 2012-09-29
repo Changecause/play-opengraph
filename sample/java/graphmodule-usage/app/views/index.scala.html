@@ -1,0 +1,21 @@
+@(message: String)
+
+@main("Welcome to play-opengraph module sample App!") {
+    
+    <h1>Index page</h1>
+    
+    <p>Look at the source of this website. It should read the opengraph tags!</p>
+    
+<pre>
+@de.tfelix.play.opengraph.views.html.opengraph().toString().trim()
+</pre>
+
+<p>
+	New try to change the language by using the ?fb_locale=de_DE parameter: Tags in <a href="/?fb_locale=de_DE">GERMAN</a>.
+</p>
+
+<p>
+	Or try the page specific tags: <a href="@routes.Application.page">second page</a>.
+</p>
+    
+}

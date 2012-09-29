@@ -1,0 +1,23 @@
+@(message: String)
+
+@main("Welcome to play-opengraph module sample App!") {
+    
+    <h1>Second page</h1>
+    
+    <p>Look for the <b>og:description</b> Tag!</p>
+    
+    <p>Example how to bind a variable value to a MetaTag.</p>
+    
+<pre>
+@de.tfelix.play.opengraph.views.html.opengraph().toString()
+</pre>
+
+<p>
+	New try to change the language by using the ?fb_locale=de_DE parameter: Tags in <a href="@routes.Application.page()?fb_locale=de_DE">GERMAN</a>.
+</p>
+
+<p>
+	Back to the main page <a href="@routes.Application.index()">back</a>.
+</p>
+    
+}
