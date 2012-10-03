@@ -14,8 +14,8 @@ public class MetaTagValue {
 	private Object[] args = null;
 
 	public MetaTagValue(String str) {
-		if(str == null) {
-			throw new NullPointerException("Value can not be null.");
+		if(str == null || str.isEmpty()) {
+			throw new IllegalArgumentException("Value can not be null or empty.");
 		}
 		
 		this.value = str;
@@ -34,8 +34,6 @@ public class MetaTagValue {
 
 	@Override
 	public String toString() {
-		//Lang language = 
-		
 		if (args == null) {
 			return Messages.get(OpengraphLanguage.getLanguage(), value);
 		} else {

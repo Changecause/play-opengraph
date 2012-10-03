@@ -10,14 +10,10 @@ import play.mvc.Http;
 
 /**
  * This action retrieves the language which Facebook wants to get via a HTTP
- * Header and sets the appropriate Lang string for translating the meta tags
- * inside view.tags.facebookMeta.scala.html Notice: It sets just the string. The
- * creation of the lang object must be handled by the scala template. Since this
- * is the place where the supported facebook languages are stored too. So if new
- * languages are added later, the only changes which must be made are inside the
- * scala template.
+ * header and sets the appropriate Lang object for translating the meta tags
+ * inside view.opengraph.scala.html.
  */
-public class OpengraphLanguage {
+class OpengraphLanguage {
 
 	static final private String LANGUAGE_KEY = "facebook-lang";
 
@@ -28,7 +24,7 @@ public class OpengraphLanguage {
 
 		String langCode = ctx.request().getHeader("X-Facebook-Locale");
 		if (langCode != null && !langCode.isEmpty()) {
-			Logger.debug("Found X-Facebook-Locale Header! "+langCode);
+			Logger.debug("X-Facebook-Locale Header found: " + langCode);
 			return langCode;
 		}
 
@@ -36,7 +32,7 @@ public class OpengraphLanguage {
 		Matcher matcher = LANGUAGE_REGEX.matcher(ctx.request().uri());
 		while (matcher.find()) {
 			langCode = matcher.group(1);
-			Logger.debug("Facebook Header 2nd: " + langCode);
+			Logger.debug("fb_locale found: " + langCode);
 			return langCode;
 		}
 		return "";
@@ -45,11 +41,12 @@ public class OpengraphLanguage {
 	/**
 	 * Returns the Lang object which is requested by Facebook. Either the one
 	 * requested by Facebook is delivered or the one which is in the language
-	 * most appropriate for the current HTTP request.
+	 * most appropriate for the current HTTP request (the language of the user
+	 * visiting the page).
 	 * 
 	 * @return
 	 */
-	public static Lang getLanguage() {
+	static Lang getLanguage() {
 		Context ctx = Http.Context.current();
 		if (!ctx.args.containsKey(LANGUAGE_KEY)) {
 			createLanguage();
@@ -57,6 +54,9 @@ public class OpengraphLanguage {
 		return ((LanguageStore) ctx.args.get(LANGUAGE_KEY)).playLanguage;
 	}
 
+	/**
+	 * Tries to detect the language requested by Facebook and saves it in a cache.
+	 */
 	private static void createLanguage() {
 		Context ctx = Http.Context.current();
 		String facebookCode = extractFacebookLanguageCode();
@@ -73,15 +73,8 @@ public class OpengraphLanguage {
 			// country codes in my language files. This may be a bug in play.
 			language = Lang.forCode(facebookCode.split("_")[0]);
 		} else {
-			// Stupid workaround. play.i18n.defaultLang() returns a
-			// play.api.i18n.Lang object, but a play.i18n.Lang is needed.
-			// This way we get the language of the current user visiting the
-			// website.
-			// language = Lang.preferred(ctx.request().acceptLanguages());
-
 			// When no language from Facebook is requested just deliver the
-			// default
-			// Language of this website.
+			// default language of this website.
 			language = new Lang(Lang.defaultLang());
 		}
 
@@ -100,8 +93,16 @@ public class OpengraphLanguage {
 	 * 
 	 * @return
 	 */
-	public static String getFacebookRequestCode() {
-		Context ctx = Http.Context.current();
+	static String getFacebookRequestCode() {
+		// Check if the request language code was already cached. If not create the
+		// cache.
+		Context ctx;
+		try {
+			ctx = Http.Context.current();
+		} catch(RuntimeException ex) {
+			// No Context aviable. Return null.
+			return null;
+		}
 		if (!ctx.args.containsKey(LANGUAGE_KEY)) {
 			createLanguage();
 		}
