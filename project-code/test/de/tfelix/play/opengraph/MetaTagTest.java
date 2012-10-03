@@ -32,4 +32,11 @@ public class MetaTagTest {
 		MetaTag tag2 = new MetaTag("test", "test");
 		Assert.assertTrue(tag1.equals(tag2));
 	}
+	
+	@Test
+	public void Same_Tags_Different_Content_Not_Equal() {
+		MetaTag tag1 = new MetaTag("test", "test");
+		MetaTag tag2 = new MetaTag("test", "different");
+		Assert.assertFalse(tag1.equals(tag2));		
+	}
 }
