@@ -51,7 +51,7 @@ public class MetaTag {
 		if(o == null || !(o instanceof MetaTag)) return false;
 		
 		MetaTag rhs = (MetaTag) o;
-		return property.equals(rhs.property) && content.equals(rhs.content);
+		return property.equals(rhs.property);// && content.equals(rhs.content);
 	}
 	
 	/**
@@ -59,7 +59,7 @@ public class MetaTag {
 	 */
 	@Override
 	public int hashCode() {
-		return property.hashCode() + content.hashCode();
+		return property.hashCode(); // + content.hashCode();
 	}
 
 	/**

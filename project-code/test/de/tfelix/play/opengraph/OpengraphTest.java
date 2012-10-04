@@ -16,9 +16,10 @@ public class OpengraphTest {
 
 	@Test
 	public void Adding_Tag() {
-		Assert.assertFalse("Openpgraph should contain no tags.", Opengraph.getTags().size() == 0);
-		Opengraph.insertPermanentTag(new MetaTag("og:title", "Test"));
-		Assert.assertTrue("Openpraph should contain added tag.", Opengraph.getTags().size() == 1);
+		Assert.assertTrue("Openpgraph should contain no tags.", Opengraph.getTags().size() == 0);
+		MetaTag tag = new MetaTag("og:title", "Test");
+		Opengraph.insertPermanentTag(tag);
+		Assert.assertTrue("Openpraph should contain added tag.", Opengraph.getTags().contains(tag));
 	}
 	
 	/*
@@ -55,20 +56,21 @@ public class OpengraphTest {
 	}
 
 	@Test
-	public void Adding_Non_Allowed_Tag_Twice_Permanent() {
-		/*running(testServer(3333), new Callback0() {
-		      public void invoke() {
-		         assertThat(
-		           WS.url("http://localhost:3333").get().get().status
-		         ).isEqualTo(OK);
-		      }
-		  });*/
+	public void Adding_Non_Allowed_Permanent_Tag_Twice() {
+		MetaTag tag1 = new MetaTag("og:title", "Test 1");
+		MetaTag tag2 = new MetaTag("og:title", "Test 2");
+		Opengraph.insertPermanentTag(tag1);
+		Opengraph.insertPermanentTag(tag2);
+		List<MetaTag> tags = Opengraph.getTags();
+		// One can not use .contains since MetaTag equal each other only by the content.
+		// Check the length of the returned list.
+		Assert.assertTrue(tags.contains(tag1)  && tags.size() == 1);
 	}
 
 	@Test
 	public void Adding_Allowed_Tag_Twice_Permanent() {
-		MetaTag tag2 = new MetaTag("og:locale:alternae", "de_DE");
-		MetaTag tag1 = new MetaTag("og:locale:alternae", "en_US");
+		MetaTag tag2 = new MetaTag("og:locale:alternate", "de_DE");
+		MetaTag tag1 = new MetaTag("og:locale:alternate", "en_US");
 		Opengraph.insertPermanentTag(tag1);
 		Opengraph.insertPermanentTag(tag2);
 		List<MetaTag> tags = Opengraph.getTags();
@@ -81,7 +83,7 @@ public class OpengraphTest {
 		MetaTag tag1 = new MetaTag("og:locale:alternate", "en_US");
 		Opengraph.insertTag("/index", tag1);
 		Opengraph.insertTag("/index", tag2);
-		List<MetaTag> tags = Opengraph.getTags();
+		List<MetaTag> tags = Opengraph.getTags("/index");
 		Assert.assertTrue("Both tags should be included.", tags.contains(tag1) && tags.contains(tag2));
 	}
 
@@ -118,8 +120,8 @@ public class OpengraphTest {
 		Opengraph.insertTag("/index", tag1);
 		Opengraph.insertPermanentTag(tag2);
 		List<MetaTag> tags = Opengraph.getTags();
-		Assert.assertTrue(tags.size() == 1);
+		Assert.assertTrue("Only permanent tag should be included.", tags.contains(tag2) && !tags.contains(tag1));
 		tags = Opengraph.getTags("/index");
-		Assert.assertTrue(tags.size() == 2);
+		Assert.assertTrue("Both tags should be included.", tags.contains(tag1) && tags.contains(tag2));
 	}
 }

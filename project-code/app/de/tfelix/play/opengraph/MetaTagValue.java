@@ -1,5 +1,6 @@
 package de.tfelix.play.opengraph;
 
+import play.i18n.Lang;
 import play.i18n.Messages;
 
 /**
@@ -34,10 +35,18 @@ public class MetaTagValue {
 
 	@Override
 	public String toString() {
+		Lang lang;
+		try {
+			lang = OpengraphLanguage.getLanguage();
+		} catch(RuntimeException ex) {
+			// Request was not aviable. Mostly because we are in testing environment.
+			lang = new Lang(Lang.defaultLang());
+		}
+		
 		if (args == null) {
-			return Messages.get(OpengraphLanguage.getLanguage(), value);
+			return Messages.get(lang, value);
 		} else {
-			return Messages.get(OpengraphLanguage.getLanguage(), value, args);
+			return Messages.get(lang, value, args);
 		}
 	}
 	

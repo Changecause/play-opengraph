@@ -8,7 +8,8 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
-import java.util.Set;
+
+import play.Logger;
 
 /**
  * Saves sets of MetaTags indexed via a String key. The tag collection can later
@@ -30,19 +31,21 @@ public class Opengraph {
 	 */
 	private static final String DEFAULT_KEY = "default";
 
-	// private static final
+	/**
+	 * Tags properties which are allowed to be added twice.
+	 */
 	private static final HashSet<String> ALLOWED_DOUBLE_TAGS = new HashSet<String>();
 	static {
 		ALLOWED_DOUBLE_TAGS.add("og:locale:alternate");
 	}
 
 	/**
-	 * Tag which holds the locale will be saved as a standalone to be replacable
+	 * Tag which holds the locale will be saved as a standalone to be replaceable
 	 * if a special language is requested from Facebook.
 	 */
 	private static MetaTag localeTag = null;
 
-	private static Map<String, HashSet<MetaTag>> metaTagsCache = new HashMap<String, HashSet<MetaTag>>();
+	private static Map<String, LinkedList<MetaTag>> metaTagsCache = new HashMap<String, LinkedList<MetaTag>>();
 
 	/**
 	 * The permanent meta tags are always added to the requested tags list. Some
@@ -50,7 +53,7 @@ public class Opengraph {
 	 * pages regardless of a key can be added to this list. They will be
 	 * delivered every time a collection of tags is requested.
 	 */
-	private static HashSet<MetaTag> permanentMetaTags = new HashSet<MetaTag>();
+	private static LinkedList<MetaTag> permanentTagsCache = new LinkedList<MetaTag>();
 
 	/**
 	 * Permanent tags will be included in ALL requests of the meta tags. Adding
@@ -63,11 +66,19 @@ public class Opengraph {
 		if (tag == null) {
 			throw new IllegalArgumentException("tag can not be null");
 		}
+
 		if (tag.getProperty().equals("og:locale")) {
 			localeTag = tag;
-		} else {
-			permanentMetaTags.add(tag);
+			return;
 		}
+
+		// If a tag which can not be added multiple times is added abort.
+		if (!ALLOWED_DOUBLE_TAGS.contains(tag.getProperty()) && permanentTagsCache.contains(tag)) {
+			Logger.warn("MetaTag " + tag.toString() + " can not be included multiple times.");
+			return;
+		}
+		
+		permanentTagsCache.add(tag);
 	}
 
 	/**
@@ -88,8 +99,15 @@ public class Opengraph {
 
 		if (metaTagsCache.get(page) == null) {
 			// Empty list. Create a new.
-			metaTagsCache.put(page, new HashSet<MetaTag>());
+			metaTagsCache.put(page, new LinkedList<MetaTag>());
 		}
+
+		// If a tag which can not be added multiple times is added abort.
+		if (!ALLOWED_DOUBLE_TAGS.contains(tag.getProperty()) && metaTagsCache.get(page).contains(tag)) {
+			Logger.warn("MetaTag " + tag.toString() + " can not be included multiple times.");
+			return;
+		}
+
 		metaTagsCache.get(page).add(tag);
 	}
 
@@ -104,7 +122,7 @@ public class Opengraph {
 	 * @param args
 	 */
 	public static void bindArgs(String page, String propertie, Object... args) {
-		HashSet<MetaTag> tags = metaTagsCache.get(page);
+		List<MetaTag> tags = metaTagsCache.get(page);
 		for (MetaTag tag : tags) {
 			if (tag.getProperty().contains(propertie)) {
 				tag.getContent().bindArgs(args);
@@ -142,10 +160,10 @@ public class Opengraph {
 		// given key.
 		// The problem is the Framework does not give us the current path
 		// without parameter. So we have to iterate over and try to match.
-		Iterator<Entry<String, HashSet<MetaTag>>> it = metaTagsCache.entrySet().iterator();
-		Set<MetaTag> foundTags = null;
+		Iterator<Entry<String, LinkedList<MetaTag>>> it = metaTagsCache.entrySet().iterator();
+		List<MetaTag> foundTags = null;
 		while (it.hasNext()) {
-			Map.Entry<String, HashSet<MetaTag>> pairs = it.next();
+			Map.Entry<String, LinkedList<MetaTag>> pairs = it.next();
 			if (page.contains(pairs.getKey())) {
 				foundTags = pairs.getValue();
 				break;
@@ -158,11 +176,13 @@ public class Opengraph {
 			// Add this code to the tag list.
 			tmp.add(new MetaTag("og:locale", OpengraphLanguage.getFacebookRequestCode()));
 		} else {
-			// otherwise add the default tag to the list.
-			tmp.add(localeTag);
+			if(localeTag != null) {
+				// otherwise add the default tag to the list.
+				tmp.add(localeTag);
+				
+				hits.add("og:locale");
+			}			
 		}
-		// Locale is always added.
-		hits.add("og:locale");
 
 		if (foundTags != null) {
 			// Add all of the found matching tags.
@@ -172,7 +192,7 @@ public class Opengraph {
 			}
 		}
 
-		for (MetaTag metaTag : permanentMetaTags) {
+		for (MetaTag metaTag : permanentTagsCache) {
 			// If this meta tag was already included in the result, do not add
 			// it again UNTIL it is a tag for which double inclusion is allowed.
 			if (hits.contains(metaTag.getProperty()) && !isMultiTag(metaTag)) {
@@ -193,7 +213,7 @@ public class Opengraph {
 	 * specific tags.
 	 */
 	public static void clearAllTags() {
-		permanentMetaTags.clear();
+		permanentTagsCache.clear();
 		metaTagsCache.clear();
 	}
 }
