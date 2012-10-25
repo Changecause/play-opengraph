@@ -1,21 +1,17 @@
 package de.tfelix.play.opengraph;
 
-import java.util.Collections;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Iterator;
-import java.util.LinkedList;
-import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
-import play.Logger;
-
 /**
- * Saves sets of MetaTags indexed via a String key. The tag collection can later
- * be requested and printed to the desired set of meta HTML tags.
+ * Saves and manages sets of MetaTags indexed via a String key. The tag
+ * collection can later be requested and printed to the desired set of meta HTML
+ * tags. This class is the entry point for registering meta tags which should
+ * show up on the different pages.
  */
-public class Opengraph {
+public final class Opengraph {
 
 	/**
 	 * Private ctor. This class should not be instantiated but used in a static
@@ -32,20 +28,15 @@ public class Opengraph {
 	private static final String DEFAULT_KEY = "default";
 
 	/**
-	 * Tags properties which are allowed to be added twice.
-	 */
-	private static final HashSet<String> ALLOWED_DOUBLE_TAGS = new HashSet<String>();
-	static {
-		ALLOWED_DOUBLE_TAGS.add("og:locale:alternate");
-	}
-
-	/**
-	 * Tag which holds the locale will be saved as a standalone to be replaceable
-	 * if a special language is requested from Facebook.
+	 * Tag which holds the locale will be saved as a standalone to be
+	 * replaceable if a special language is requested from Facebook.
 	 */
 	private static MetaTag localeTag = null;
 
-	private static Map<String, LinkedList<MetaTag>> metaTagsCache = new HashMap<String, LinkedList<MetaTag>>();
+	/**
+	 * MetaTagSets are saved in respect to a specific route.
+	 */
+	private static Map<String, MetaTagSet> metaTagsCache = new HashMap<String, MetaTagSet>();
 
 	/**
 	 * The permanent meta tags are always added to the requested tags list. Some
@@ -53,7 +44,7 @@ public class Opengraph {
 	 * pages regardless of a key can be added to this list. They will be
 	 * delivered every time a collection of tags is requested.
 	 */
-	private static LinkedList<MetaTag> permanentTagsCache = new LinkedList<MetaTag>();
+	private static MetaTagSet permanentMetaTags = new MetaTagSet();
 
 	/**
 	 * Permanent tags will be included in ALL requests of the meta tags. Adding
@@ -63,22 +54,7 @@ public class Opengraph {
 	 * @param tag
 	 */
 	public static void insertPermanentTag(MetaTag tag) {
-		if (tag == null) {
-			throw new IllegalArgumentException("tag can not be null");
-		}
-
-		if (tag.getProperty().equals("og:locale")) {
-			localeTag = tag;
-			return;
-		}
-
-		// If a tag which can not be added multiple times is added abort.
-		if (!ALLOWED_DOUBLE_TAGS.contains(tag.getProperty()) && permanentTagsCache.contains(tag)) {
-			Logger.warn("MetaTag " + tag.toString() + " can not be included multiple times.");
-			return;
-		}
-		
-		permanentTagsCache.add(tag);
+		permanentMetaTags.add(tag);
 	}
 
 	/**
@@ -90,44 +66,16 @@ public class Opengraph {
 	 * @param tag
 	 */
 	public static void insertTag(String page, MetaTag tag) {
-		if (page == null) {
-			throw new IllegalArgumentException("Page can not be null.");
-		}
-		if (tag == null) {
-			throw new IllegalArgumentException("Metatag can not be null.");
+		if (page == null || page.isEmpty()) {
+			throw new IllegalArgumentException("Page can not be null or empty.");
 		}
 
 		if (metaTagsCache.get(page) == null) {
 			// Empty list. Create a new.
-			metaTagsCache.put(page, new LinkedList<MetaTag>());
-		}
-
-		// If a tag which can not be added multiple times is added abort.
-		if (!ALLOWED_DOUBLE_TAGS.contains(tag.getProperty()) && metaTagsCache.get(page).contains(tag)) {
-			Logger.warn("MetaTag " + tag.toString() + " can not be included multiple times.");
-			return;
+			metaTagsCache.put(page, new MetaTagSet());
 		}
 
 		metaTagsCache.get(page).add(tag);
-	}
-
-	/**
-	 * Binds new args to the MetaTags which are chosen with a key and a property
-	 * value.<br>
-	 * ATTENTION: Also the permanentMetaTags are also tried to bind to a new
-	 * value, if the match the given property.
-	 * 
-	 * @param page
-	 * @param propertie
-	 * @param args
-	 */
-	public static void bindArgs(String page, String propertie, Object... args) {
-		List<MetaTag> tags = metaTagsCache.get(page);
-		for (MetaTag tag : tags) {
-			if (tag.getProperty().contains(propertie)) {
-				tag.getContent().bindArgs(args);
-			}
-		}
 	}
 
 	/**
@@ -137,7 +85,7 @@ public class Opengraph {
 	 * @return
 	 * @throws Exception
 	 */
-	public static List<MetaTag> getTags() {
+	public static MetaTagSet getTags() {
 		return getTags(DEFAULT_KEY);
 	}
 
@@ -148,22 +96,23 @@ public class Opengraph {
 	 * @param page
 	 * @return
 	 */
-	public static List<MetaTag> getTags(String page) {
+	public static MetaTagSet getTags(String page) {
 		if (page == null || page.isEmpty()) {
 			throw new IllegalArgumentException("Page can not be null or empty.");
 		}
-
-		HashSet<String> hits = new HashSet<String>();
-		List<MetaTag> tmp = new LinkedList<MetaTag>();
+		
+		MetaTagSet result = new MetaTagSet();
+		// Add all permanent tags to the result set.
+		result.add(permanentMetaTags);
 
 		// Iterate over all other tags and try to find one which matches the
 		// given key.
 		// The problem is the Framework does not give us the current path
 		// without parameter. So we have to iterate over and try to match.
-		Iterator<Entry<String, LinkedList<MetaTag>>> it = metaTagsCache.entrySet().iterator();
-		List<MetaTag> foundTags = null;
+		Iterator<Entry<String, MetaTagSet>> it = metaTagsCache.entrySet().iterator();
+		MetaTagSet foundTags = null;
 		while (it.hasNext()) {
-			Map.Entry<String, LinkedList<MetaTag>> pairs = it.next();
+			Map.Entry<String, MetaTagSet> pairs = it.next();
 			if (page.contains(pairs.getKey())) {
 				foundTags = pairs.getValue();
 				break;
@@ -174,38 +123,21 @@ public class Opengraph {
 		String facebookLanguageCode = OpengraphLanguage.getFacebookRequestCode();
 		if (facebookLanguageCode != null && !facebookLanguageCode.isEmpty()) {
 			// Add this code to the tag list.
-			tmp.add(new MetaTag("og:locale", OpengraphLanguage.getFacebookRequestCode()));
+			result.add(new MetaTag("og:locale", OpengraphLanguage.getFacebookRequestCode()));
 		} else {
-			if(localeTag != null) {
+			if (localeTag != null) {
 				// otherwise add the default tag to the list.
-				tmp.add(localeTag);
-				
-				hits.add("og:locale");
-			}			
+				result.add(localeTag);
+				//hits.add("og:locale");
+			}
 		}
 
 		if (foundTags != null) {
 			// Add all of the found matching tags.
-			tmp.addAll(foundTags);
-			for (MetaTag metaTag : foundTags) {
-				hits.add(metaTag.getProperty());
-			}
+			result.add(foundTags);
 		}
 
-		for (MetaTag metaTag : permanentTagsCache) {
-			// If this meta tag was already included in the result, do not add
-			// it again UNTIL it is a tag for which double inclusion is allowed.
-			if (hits.contains(metaTag.getProperty()) && !isMultiTag(metaTag)) {
-				continue;
-			}
-			tmp.add(metaTag);
-		}
-
-		return Collections.unmodifiableList(tmp);
-	}
-
-	private static boolean isMultiTag(MetaTag metaTag) {
-		return ALLOWED_DOUBLE_TAGS.contains(metaTag.getProperty());
+		return result;
 	}
 
 	/**
@@ -213,7 +145,7 @@ public class Opengraph {
 	 * specific tags.
 	 */
 	public static void clearAllTags() {
-		permanentTagsCache.clear();
+		permanentMetaTags = new MetaTagSet();
 		metaTagsCache.clear();
 	}
 }
