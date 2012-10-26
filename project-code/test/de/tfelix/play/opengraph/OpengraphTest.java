@@ -1,7 +1,5 @@
 package de.tfelix.play.opengraph;
 
-import java.util.List;
-
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
@@ -16,10 +14,10 @@ public class OpengraphTest {
 
 	@Test
 	public void Adding_Tag() {
-		Assert.assertTrue("Openpgraph should contain no tags.", Opengraph.getTags().size() == 0);
+		Assert.assertTrue("Openpgraph should contain no tags.", Opengraph.getTags().toString().isEmpty());
 		MetaTag tag = new MetaTag("og:title", "Test");
 		Opengraph.insertPermanentTag(tag);
-		Assert.assertTrue("Openpraph should contain added tag.", Opengraph.getTags().contains(tag));
+		Assert.assertTrue("Openpraph should contain added tag.", Opengraph.getTags().toString().contains(tag.getProperty()));
 	}
 	
 	/*
@@ -51,8 +49,8 @@ public class OpengraphTest {
 	public void Special_Tag_Hides_Permanent() {
 		MetaTag insertTag = new MetaTag("og:title", "HelloWorld");
 		Opengraph.insertTag("/index", insertTag);
-		List<MetaTag> tags = Opengraph.getTags("/index");
-		Assert.assertTrue("MetaTags should be identical.", tags.contains(insertTag));
+		MetaTagSet tags = Opengraph.getTags("/index");
+		Assert.assertTrue("MetaTags should be identical.", tags.toString().contains(insertTag.getProperty()));
 	}
 
 	@Test
@@ -61,10 +59,10 @@ public class OpengraphTest {
 		MetaTag tag2 = new MetaTag("og:title", "Test 2");
 		Opengraph.insertPermanentTag(tag1);
 		Opengraph.insertPermanentTag(tag2);
-		List<MetaTag> tags = Opengraph.getTags();
+		MetaTagSet tags = Opengraph.getTags();
 		// One can not use .contains since MetaTag equal each other only by the content.
 		// Check the length of the returned list.
-		Assert.assertTrue(tags.contains(tag1)  && tags.size() == 1);
+		Assert.assertTrue(tags.toString().contains(tag1.getProperty())  && tags.size() == 1);
 	}
 
 	@Test
@@ -73,8 +71,8 @@ public class OpengraphTest {
 		MetaTag tag1 = new MetaTag("og:locale:alternate", "en_US");
 		Opengraph.insertPermanentTag(tag1);
 		Opengraph.insertPermanentTag(tag2);
-		List<MetaTag> tags = Opengraph.getTags();
-		Assert.assertTrue(tags.contains(tag1) && tags.contains(tag2));
+		MetaTagSet tags = Opengraph.getTags();
+		Assert.assertTrue(tags.toString().contains(tag1.getProperty()) && tags.toString().contains(tag2.getProperty()));
 	}
 
 	@Test
@@ -83,8 +81,10 @@ public class OpengraphTest {
 		MetaTag tag1 = new MetaTag("og:locale:alternate", "en_US");
 		Opengraph.insertTag("/index", tag1);
 		Opengraph.insertTag("/index", tag2);
-		List<MetaTag> tags = Opengraph.getTags("/index");
-		Assert.assertTrue("Both tags should be included.", tags.contains(tag1) && tags.contains(tag2));
+		MetaTagSet tags = Opengraph.getTags("/index");
+		Assert.assertTrue("Both tags should be included.", 
+				tags.toString().contains(tag1.getProperty()) && 
+				tags.toString().contains(tag2.getProperty()));
 	}
 
 	@Test
@@ -95,12 +95,16 @@ public class OpengraphTest {
 		Opengraph.insertTag("/index", tag1);
 		Opengraph.insertTag("/page", tag2);
 		Opengraph.insertPermanentTag(tag3);
-		List<MetaTag> tags = Opengraph.getTags("/page");
+		MetaTagSet tags = Opengraph.getTags("/page");
 		// Should contain only page specific and permanent tags.
-		Assert.assertTrue("Should contain only page specific tags.", tags.contains(tag2) && tags.contains(tag3));
+		Assert.assertTrue("Should contain only page specific tags.", 
+				tags.toString().contains(tag2.getProperty()) &&
+				tags.toString().contains(tag3.getProperty()));
 		
 		tags = Opengraph.getTags("/index");
-		Assert.assertTrue("Should contain only /index page tags.", tags.contains(tag1) && tags.contains(tag3));
+		Assert.assertTrue("Should contain only /index page tags.", 
+				tags.toString().contains(tag1.getProperty()) && 
+				tags.toString().contains(tag3.getProperty()));
 	}
 	
 	@Test(expected=IllegalArgumentException.class)
@@ -119,9 +123,13 @@ public class OpengraphTest {
 		MetaTag tag2 = new MetaTag("og:description", "Test Description");
 		Opengraph.insertTag("/index", tag1);
 		Opengraph.insertPermanentTag(tag2);
-		List<MetaTag> tags = Opengraph.getTags();
-		Assert.assertTrue("Only permanent tag should be included.", tags.contains(tag2) && !tags.contains(tag1));
+		MetaTagSet tags = Opengraph.getTags();
+		Assert.assertTrue("Only permanent tag should be included.", 
+				tags.toString().contains(tag2.getProperty()) && 
+				!tags.toString().contains(tag1.getProperty()));
 		tags = Opengraph.getTags("/index");
-		Assert.assertTrue("Both tags should be included.", tags.contains(tag1) && tags.contains(tag2));
+		Assert.assertTrue("Both tags should be included.", 
+				tags.toString().contains(tag1.toString()) && 
+				tags.toString().contains(tag2.toString()));
 	}
 }

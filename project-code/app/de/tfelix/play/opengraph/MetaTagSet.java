@@ -84,4 +84,12 @@ public class MetaTagSet {
 	public void add(MetaTagSet set) {
 		metaTags.addAll(set.metaTags);
 	}
+	
+	/**
+	 * Lists the number of MetaTags which are currently inside this set.
+	 * @return
+	 */
+	public int size() {
+		return metaTagsCache.size();
+	}
 }

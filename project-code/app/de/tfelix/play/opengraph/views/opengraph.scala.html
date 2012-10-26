@@ -1,3 +1,2 @@
 @import de.tfelix.play.opengraph._
-@for(tag <- Opengraph.getTags(Http.Context.current().request().path()).iterator()) {@Html(tag.toString())
-}
+@Html(Opengraph.getTags(Http.Context.current().request().path()).toString())
