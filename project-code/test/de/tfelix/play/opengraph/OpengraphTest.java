@@ -132,4 +132,30 @@ public class OpengraphTest {
 				tags.toString().contains(tag1.toString()) && 
 				tags.toString().contains(tag2.toString()));
 	}
+	
+	@Test
+	public void Add_MetaTagSet() {
+		MetaTagSet set = new MetaTagSet();
+		set.add(new MetaTag("og:title", "Test1"));
+		Opengraph.insertTag("/pages/view", set);
+		set = Opengraph.getTags("example.com/pages/view/1");
+		Assert.assertTrue(set.toString().contains("og:title"));
+	}
+	
+	/**
+	 * This test will check if direct URLs like http://example.com/MYID will work as required
+	 * for a webproject of mine.
+	 */
+	@Test
+	public void Regex_Changing_Short_Url() {
+		MetaTagSet set = new MetaTagSet();
+		set.add(new MetaTag("og:title", "Test1"));
+		Opengraph.insertTag("/\\w+", set);
+		set = new MetaTagSet();
+		set.add(new MetaTag("og:description", "Test description"));
+		Opengraph.insertTag("/images/id", set);
+		set = Opengraph.getTags("example.com/TEST123");
+		Assert.assertTrue("Only the title tag should be found",
+				set.toString().contains("og:title") && !set.toString().contains("og:description"));
+	}
 }

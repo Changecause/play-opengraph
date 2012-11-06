@@ -1,9 +1,9 @@
 package de.tfelix.play.opengraph;
 
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.Map;
-import java.util.Map.Entry;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * Saves and manages sets of MetaTags indexed via a String key. The tag
@@ -13,6 +13,20 @@ import java.util.Map.Entry;
  */
 public final class Opengraph {
 
+	private static class PatternTuple {
+		public Pattern pattern;
+		public MetaTagSet metaTagset;
+		
+		@Override
+		public boolean equals(Object o) {
+			if(this == o) return true;
+			if(o == null || !(o instanceof PatternTuple)) return false;
+			
+			PatternTuple rhs = (PatternTuple) o;
+			return pattern.equals(rhs.pattern);
+		}
+	}
+	
 	/**
 	 * Private ctor. This class should not be instantiated but used in a static
 	 * way.
@@ -36,7 +50,7 @@ public final class Opengraph {
 	/**
 	 * MetaTagSets are saved in respect to a specific route.
 	 */
-	private static Map<String, MetaTagSet> metaTagsCache = new HashMap<String, MetaTagSet>();
+	private static List<PatternTuple> metaTagsCache = new LinkedList<PatternTuple>();
 
 	/**
 	 * The permanent meta tags are always added to the requested tags list. Some
@@ -64,18 +78,47 @@ public final class Opengraph {
 	 * 
 	 * @param page
 	 * @param tag
+	 * @deprecated Insert all tags at once with a MetaTagSet since lookup is inefficent now.
 	 */
+	@Deprecated
 	public static void insertTag(String page, MetaTag tag) {
 		if (page == null || page.isEmpty()) {
 			throw new IllegalArgumentException("Page can not be null or empty.");
 		}
-
-		if (metaTagsCache.get(page) == null) {
-			// Empty list. Create a new.
-			metaTagsCache.put(page, new MetaTagSet());
+		
+		// Workaround.
+		PatternTuple tpl = new PatternTuple();
+		tpl.pattern = Pattern.compile(page);
+		int index = metaTagsCache.indexOf(tpl);
+		if(index == -1) {
+			MetaTagSet set = new MetaTagSet();
+			set.add(tag);
+			tpl.metaTagset = set;
+			metaTagsCache.add(tpl);
+		} else {
+			metaTagsCache.get(index).metaTagset.add(tag);
 		}
-
-		metaTagsCache.get(page).add(tag);
+	}
+	
+	public static void insertTag(String page, MetaTagSet tagset) {
+		if(page == null || page.isEmpty()) {
+			throw new IllegalArgumentException("Page string can not be null or empty.");
+		}
+		if(tagset == null) {
+			throw new IllegalArgumentException("MetaTagSet can not be null.");
+		}
+		// Check if the linked list already contains a tagset for the given page.
+		// if so replace.
+		PatternTuple tpl = new PatternTuple();
+		tpl.metaTagset = tagset;
+		tpl.pattern = Pattern.compile(page);
+		// Check if a PatternTuple with the same page already exists. It does this by just
+		// checking the regex pattern for equality.
+		if(metaTagsCache.contains(tpl)) {
+			metaTagsCache.remove(tpl);
+		}
+		
+		metaTagsCache.add(tpl);
 	}
 
 	/**
@@ -109,12 +152,14 @@ public final class Opengraph {
 		// given key.
 		// The problem is the Framework does not give us the current path
 		// without parameter. So we have to iterate over and try to match.
-		Iterator<Entry<String, MetaTagSet>> it = metaTagsCache.entrySet().iterator();
+		// But doing it this way is inefficent.
+		// @TODO Implement another data structure like a tree with regex.
+		// http://stackoverflow.com/questions/7049894/how-to-efficiently-match-an-input-string-against-several-regular-expressions-at
 		MetaTagSet foundTags = null;
-		while (it.hasNext()) {
-			Map.Entry<String, MetaTagSet> pairs = it.next();
-			if (page.contains(pairs.getKey())) {
-				foundTags = pairs.getValue();
+		for(PatternTuple tuple : metaTagsCache) {
+			Matcher matcher = tuple.pattern.matcher(page);
+			if(matcher.find()) {
+				foundTags = tuple.metaTagset;
 				break;
 			}
 		}
