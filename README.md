@@ -16,14 +16,14 @@ Dependency declaration is:
 
 The complete Build.scala looks like this:
 
-```
+```scala
 object ApplicationBuild extends Build {
 
 	val appName = "opengraph-usage"
-	val appVersion = "0.1.0"
+	val appVersion = "0.1.1"
 
 	val appDependencies = Seq( 
-		"de.tfelix"				%% "opengraph-module"			% "0.1.0"
+		"de.tfelix"				%% "opengraph-module"			% "0.1.1"
 	)
 
 	val main = PlayProject(appName, appVersion, appDependencies, mainLang = JAVA).settings(
