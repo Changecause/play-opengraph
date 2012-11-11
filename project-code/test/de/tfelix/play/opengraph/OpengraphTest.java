@@ -4,6 +4,8 @@ import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
+import play.Logger;
+
 
 public class OpengraphTest {
 
@@ -62,7 +64,8 @@ public class OpengraphTest {
 		MetaTagSet tags = Opengraph.getTags();
 		// One can not use .contains since MetaTag equal each other only by the content.
 		// Check the length of the returned list.
-		Assert.assertTrue(tags.toString().contains(tag1.getProperty())  && tags.size() == 1);
+		Logger.debug(tags.toString());
+		Assert.assertTrue(tags.toString().contains(tag2.getContent().toString())  && tags.size() == 1);
 	}
 
 	@Test

@@ -35,7 +35,7 @@ public class MetaTagSet {
 
 		// If a tag which can not be added multiple times overwrite it with the
 		// new version.
-		if (!ALLOWED_DOUBLE_TAGS.contains(tag.getProperty()) && metaTagsCache.contains(tag)) {
+		if (!ALLOWED_DOUBLE_TAGS.contains(tag.getProperty()) && metaTagsCache.contains(tag.getProperty())) {
 			Logger.debug("MetaTag " + tag.toString() + " was already included. Will be overwritten.");
 			metaTags.remove(tag);
 		}
@@ -90,6 +90,6 @@ public class MetaTagSet {
 	 * @return
 	 */
 	public int size() {
-		return metaTagsCache.size();
+		return metaTags.size();
 	}
 }
