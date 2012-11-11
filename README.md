@@ -11,19 +11,19 @@ Since there is no reposity for Play modules this module is (like some others) ho
 Dependency declaration is:
 
 ```
-"de.tfelix"	%% "opengraph-module" % "0.1.0"
+"de.tfelix"	%% "opengraph-module" % "0.1.1"
 ```
 
 The complete Build.scala looks like this:
 
-```
+```scala
 object ApplicationBuild extends Build {
 
 	val appName = "opengraph-usage"
-	val appVersion = "0.1.0"
+	val appVersion = "0.1.1"
 
 	val appDependencies = Seq( 
-		"de.tfelix"				%% "opengraph-module"			% "0.1.0"
+		"de.tfelix"				%% "opengraph-module"			% "0.1.1"
 	)
 
 	val main = PlayProject(appName, appVersion, appDependencies, mainLang = JAVA).settings(
