@@ -65,7 +65,7 @@ public class OpengraphTest {
 		// One can not use .contains since MetaTag equal each other only by the content.
 		// Check the length of the returned list.
 		Logger.debug(tags.toString());
-		Assert.assertTrue(tags.toString().contains(tag2.getContent().toString())  && tags.size() == 1);
+		Assert.assertTrue(tags.toString().contains(tag2.getContent().toString()));
 	}
 
 	@Test
@@ -88,6 +88,28 @@ public class OpengraphTest {
 		Assert.assertTrue("Both tags should be included.", 
 				tags.toString().contains(tag1.getProperty()) && 
 				tags.toString().contains(tag2.getProperty()));
+	}
+	
+	@Test
+	public void Adding_Permenant_Overwriting_With_Single_Page() {
+		Opengraph.insertPermanentTag(new MetaTag("og:description", "Small Test"));
+		Opengraph.insertPermanentTag(new MetaTag("og:site_name", "Website"));
+		Opengraph.insertPermanentTag(new MetaTag("og:app_id", "123456"));
+		Opengraph.insertPermanentTag(new MetaTag("og:locale:alternate", "de_DE"));
+		
+		MetaTagSet set = new MetaTagSet();
+		set.add(new MetaTag("og:site_name", "OVERWRITE"));
+		set.add(new MetaTag("og:locale:alternate", "en_US"));
+		Opengraph.insertTag("/index", set);
+		
+		MetaTagSet tags = Opengraph.getTags("/index");
+		// Single tags should be overwritten.
+		String result = tags.toString();
+		Assert.assertFalse("og:site_name should have been overridden.", result.contains("Website"));
+		Assert.assertTrue("og:site_name should be OVERWRITE", result.contains("OVERWRITE"));
+		// Should contain both languages.
+		Assert.assertTrue("Should contain both alt. languages.", result.contains("de_DE") && result.contains("en_US"));
+		
 	}
 
 	@Test

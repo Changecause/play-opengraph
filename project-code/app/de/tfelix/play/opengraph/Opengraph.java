@@ -144,9 +144,8 @@ public final class Opengraph {
 			throw new IllegalArgumentException("Page can not be null or empty.");
 		}
 		
-		MetaTagSet result = new MetaTagSet();
 		// Add all permanent tags to the result set.
-		result.add(permanentMetaTags);
+		MetaTagSet result = new MetaTagSet(permanentMetaTags);
 
 		// Iterate over all other tags and try to find one which matches the
 		// given key.
@@ -163,6 +162,11 @@ public final class Opengraph {
 				break;
 			}
 		}
+		
+		if (foundTags != null) {
+			// Add all of the found matching tags.
+			result.add(foundTags);
+		}
 
 		// Get the current language and add a locale tag for it.
 		String facebookLanguageCode = OpengraphLanguage.getFacebookRequestCode();
@@ -173,13 +177,7 @@ public final class Opengraph {
 			if (localeTag != null) {
 				// otherwise add the default tag to the list.
 				result.add(localeTag);
-				//hits.add("og:locale");
 			}
-		}
-
-		if (foundTags != null) {
-			// Add all of the found matching tags.
-			result.add(foundTags);
 		}
 
 		return result;

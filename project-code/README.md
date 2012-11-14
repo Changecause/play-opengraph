@@ -3,6 +3,9 @@ Changelog
 
 ## Changelog ##
 
+### 0.1.2 ###
+ * When adding a MetaTagSet to another tags are now checked if they are allowed multiple times. If yes they are added, if not the old ones will be overwritten.
+
 ### 0.1.1 - 11.11.2012 ###
  * Introduced MetaTagSet, a collection of MetTags, this class will now do the verification of new tags and checks for not allowed duplicates of tags.
  * The search for the current page is done via regex (currently a bit inefficent). But routes can now be matched against a regex string. E.g: Openpragh.insertTag("/\\w+", TAGS) will match all page URLS like "/123" or "/1" etc.

@@ -28,20 +28,28 @@ public class MetaTagSet {
 	private HashSet<String> metaTagsCache = new HashSet<String>();
 	private LinkedList<MetaTag> metaTags = new LinkedList<MetaTag>();
 
-	public void add(MetaTag tag) {
-		if (tag == null) {
-			throw new IllegalArgumentException("tag can not be null");
-		}
-
-		// If a tag which can not be added multiple times overwrite it with the
-		// new version.
-		if (!ALLOWED_DOUBLE_TAGS.contains(tag.getProperty()) && metaTagsCache.contains(tag.getProperty())) {
-			Logger.debug("MetaTag " + tag.toString() + " was already included. Will be overwritten.");
-			metaTags.remove(tag);
+	/**
+	 * Std. Ctor.
+	 * Creates an empty MetaTagSet.
+	 */
+	public MetaTagSet() {
+		
+	}
+	
+	/**
+	 * Copy Ctor.
+	 * Will copy the content of the rhs to the current new MetaTagSet.
+	 * @param rhs
+	 */
+	public MetaTagSet(MetaTagSet rhs) {
+		if(rhs == null) {
+			throw new IllegalArgumentException("Rhs can not be null.");
 		}
 		
-		metaTagsCache.add(tag.getProperty());
-		metaTags.add(tag);
+		// Copy the important stuff.
+		metaTags.addAll(rhs.metaTags);
+		metaTagsCache.addAll(rhs.metaTagsCache);
+		
 	}
 
 	/**
@@ -70,23 +78,46 @@ public class MetaTagSet {
 	public String toString() {
 		StringBuilder builder = new StringBuilder();
 		for (MetaTag tag : metaTags) {
-			builder.append(tag.toString());
+			builder.append(tag.toString()).append("\n");
 		}
 		return builder.toString();
 	}
 
 	/**
-	 * Adds all MetaTags from the set to the current set.
+	 * Adds all MetaTags from the set to the current set. This method will
+	 * combine the sets in a safe way. Allowed multi tags will be included
+	 * multiple times while single tags will overwrite the current tags-
 	 * 
 	 * @param set
 	 *            Adds all parameter from the set to the current set.
 	 */
-	public void add(MetaTagSet set) {
-		metaTags.addAll(set.metaTags);
+	public void add(MetaTagSet rhs) {		
+		// Now iterate over the given rhs set and see if the tags
+		// can be added.
+		for(MetaTag tag : rhs.metaTags) {
+			add(tag);			
+		}
 	}
 	
+	public void add(MetaTag tag) {
+		if (tag == null) {
+			throw new IllegalArgumentException("tag can not be null");
+		}
+
+		// If a tag which can not be added multiple times overwrite it with the
+		// new version.
+		if (!ALLOWED_DOUBLE_TAGS.contains(tag.getProperty()) && metaTagsCache.contains(tag.getProperty())) {
+			Logger.debug("MetaTag " + tag.toString() + " was already included. Will be overwritten.");
+			metaTags.remove(tag);
+		}
+
+		metaTagsCache.add(tag.getProperty());
+		metaTags.add(tag);
+	}
+
 	/**
 	 * Lists the number of MetaTags which are currently inside this set.
+	 * 
 	 * @return
 	 */
 	public int size() {

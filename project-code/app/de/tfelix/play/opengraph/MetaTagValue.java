@@ -40,6 +40,8 @@ public class MetaTagValue {
 			lang = OpengraphLanguage.getLanguage();
 		} catch(RuntimeException ex) {
 			// Request was not aviable. Mostly because we are in testing environment.
+			// @TODO Look if this can not be handled by a advanced testcase rather then here in
+			// code.
 			lang = new Lang(Lang.defaultLang());
 		}
 		
