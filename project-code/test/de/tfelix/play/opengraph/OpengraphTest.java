@@ -50,7 +50,9 @@ public class OpengraphTest {
 	@Test
 	public void Special_Tag_Hides_Permanent() {
 		MetaTag insertTag = new MetaTag("og:title", "HelloWorld");
-		Opengraph.insertTag("/index", insertTag);
+		MetaTagSet set = new MetaTagSet();
+		set.add(insertTag);
+		Opengraph.insertTag("/index", set);
 		MetaTagSet tags = Opengraph.getTags("/index");
 		Assert.assertTrue("MetaTags should be identical.", tags.toString().contains(insertTag.getProperty()));
 	}
@@ -82,8 +84,10 @@ public class OpengraphTest {
 	public void Adding_Allowed_Tag_Twice_Page() {
 		MetaTag tag2 = new MetaTag("og:locale:alternate", "de_DE");
 		MetaTag tag1 = new MetaTag("og:locale:alternate", "en_US");
-		Opengraph.insertTag("/index", tag1);
-		Opengraph.insertTag("/index", tag2);
+		MetaTagSet set = new MetaTagSet();
+		set.add(tag1);
+		set.add(tag2);
+		Opengraph.insertTag("/index", set);
 		MetaTagSet tags = Opengraph.getTags("/index");
 		Assert.assertTrue("Both tags should be included.", 
 				tags.toString().contains(tag1.getProperty()) && 
@@ -117,8 +121,13 @@ public class OpengraphTest {
 		MetaTag tag1 = new MetaTag("og:locale:alternate", "en_US");
 		MetaTag tag2 = new MetaTag("og:locale:alternate", "de_DE");
 		MetaTag tag3 = new MetaTag("og:title", "Testtitle");
-		Opengraph.insertTag("/index", tag1);
-		Opengraph.insertTag("/page", tag2);
+		MetaTagSet set1 = new MetaTagSet();
+		MetaTagSet set2 = new MetaTagSet();
+		set1.add(tag1);
+		set2.add(tag2);
+
+		Opengraph.insertTag("/index", set1);
+		Opengraph.insertTag("/page", set2);
 		Opengraph.insertPermanentTag(tag3);
 		MetaTagSet tags = Opengraph.getTags("/page");
 		// Should contain only page specific and permanent tags.
@@ -146,7 +155,9 @@ public class OpengraphTest {
 	public void Getting_All_Tags() {
 		MetaTag tag1 = new MetaTag("og:title", "Test");
 		MetaTag tag2 = new MetaTag("og:description", "Test Description");
-		Opengraph.insertTag("/index", tag1);
+		MetaTagSet set = new MetaTagSet();
+		set.add(tag1);
+		Opengraph.insertTag("/index", set);
 		Opengraph.insertPermanentTag(tag2);
 		MetaTagSet tags = Opengraph.getTags();
 		Assert.assertTrue("Only permanent tag should be included.", 
