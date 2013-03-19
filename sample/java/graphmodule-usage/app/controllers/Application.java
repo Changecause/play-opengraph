@@ -19,7 +19,7 @@ public class Application extends Controller {
 		// URL and want to give each page a unique description. Note: This example is a bit flawed since a fast
 		// changing value like visitor count will not be picked up the the Facebook scraper. It is just included
 		// to show you the process of dynamic parameter setting.
-		Opengraph.bindArgs("/page", "og:description", visits);
+		Opengraph.getTags("/page").bindArgs("og:description", visits);
 		visits++;
 		return ok(page.render("Second example page."));
 	}

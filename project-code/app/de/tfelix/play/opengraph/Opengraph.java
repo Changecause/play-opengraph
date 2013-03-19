@@ -35,11 +35,6 @@ public final class Opengraph {
 		// no op
 	}
 
-	/**
-	 * Keyword for the MetaTags which are selected when no specific key is
-	 * requested.
-	 */
-	private static final String DEFAULT_KEY = "default";
 
 	/**
 	 * Tag which holds the locale will be saved as a standalone to be
@@ -70,39 +65,10 @@ public final class Opengraph {
 	public static void insertPermanentTag(MetaTag tag) {
 		permanentMetaTags.add(tag);
 	}
-
-	/**
-	 * Inserts a tag for the given page key. With this key all tags can later be
-	 * retrieved. Tags with the same property but a specialized page url will
-	 * override permanent tags.
-	 * 
-	 * @param page
-	 * @param tag
-	 * @deprecated Insert all tags at once with a MetaTagSet since lookup is inefficent now.
-	 */
-	@Deprecated
-	public static void insertTag(String page, MetaTag tag) {
-		if (page == null || page.isEmpty()) {
-			throw new IllegalArgumentException("Page can not be null or empty.");
-		}
-		
-		// Workaround.
-		PatternTuple tpl = new PatternTuple();
-		tpl.pattern = Pattern.compile(page);
-		int index = metaTagsCache.indexOf(tpl);
-		if(index == -1) {
-			MetaTagSet set = new MetaTagSet();
-			set.add(tag);
-			tpl.metaTagset = set;
-			metaTagsCache.add(tpl);
-		} else {
-			metaTagsCache.get(index).metaTagset.add(tag);
-		}
-	}
 	
 	public static void insertTag(String page, MetaTagSet tagset) {
-		if(page == null || page.isEmpty()) {
-			throw new IllegalArgumentException("Page string can not be null or empty.");
+		if(page == null) {
+			throw new IllegalArgumentException("Page string can not be null.");
 		}
 		if(tagset == null) {
 			throw new IllegalArgumentException("MetaTagSet can not be null.");
@@ -121,16 +87,6 @@ public final class Opengraph {
 		metaTagsCache.add(tpl);
 	}
 
-	/**
-	 * Returns the same as getTags(String key) but only the default tags, saved
-	 * under the default key.
-	 * 
-	 * @return
-	 * @throws Exception
-	 */
-	public static MetaTagSet getTags() {
-		return getTags(DEFAULT_KEY);
-	}
 
 	/**
 	 * Returns a unmodifiable list (read only) of the requested tags in addition
@@ -140,7 +96,7 @@ public final class Opengraph {
 	 * @return
 	 */
 	public static MetaTagSet getTags(String page) {
-		if (page == null || page.isEmpty()) {
+		if (page == null) {
 			throw new IllegalArgumentException("Page can not be null or empty.");
 		}
 		
@@ -169,10 +125,10 @@ public final class Opengraph {
 		}
 
 		// Get the current language and add a locale tag for it.
-		String facebookLanguageCode = OpengraphLanguage.getFacebookRequestCode();
+		String facebookLanguageCode = OpengraphLanguage.getFacebookLanguageCode();
 		if (facebookLanguageCode != null && !facebookLanguageCode.isEmpty()) {
 			// Add this code to the tag list.
-			result.add(new MetaTag("og:locale", OpengraphLanguage.getFacebookRequestCode()));
+			result.add(new MetaTag("og:locale", OpengraphLanguage.getFacebookLanguageCode()));
 		} else {
 			if (localeTag != null) {
 				// otherwise add the default tag to the list.

@@ -1,19 +1,16 @@
 package de.tfelix.play.opengraph.views;
 
-import java.util.HashMap;
+import static play.test.Helpers.running;
+import static play.test.Helpers.testServer;
 
+import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
+import play.libs.WS;
 import de.tfelix.play.opengraph.MetaTag;
 import de.tfelix.play.opengraph.MetaTagSet;
 import de.tfelix.play.opengraph.Opengraph;
-import de.tfelix.play.opengraph.views.html.opengraph;
-
-import play.mvc.Content;
-import play.mvc.Http.Context;
-import static play.test.Helpers.*;
-import static org.fest.assertions.Assertions.*;
 
 public class OpengraphTest {
 
@@ -23,25 +20,17 @@ public class OpengraphTest {
 		Opengraph.insertPermanentTag(new MetaTag("og:title", "Title"));
 		MetaTagSet tagset = new MetaTagSet();
 		tagset.add(new MetaTag("og:description", "This is a small description of the site."));
-		Opengraph.insertTag("/index", tagset);
+		Opengraph.insertTag("", tagset);
 	}
 
-	/* @Test
-	 Removed until i figure out a way to call a single template with  context.
-	public void renderTemplate() {
-		running(fakeApplication(), new Runnable() {
+	@Test
+	public void renderTemplateInServer() {
+		running(testServer(3333), new Runnable() {
+
+			@Override
 			public void run() {
-				Context.current.set(new Context(null,
-						new HashMap<String, String>(), 
-						new HashMap<String, String>()));
-				
-				
-				Content html = opengraph.render();
-				assertThat(contentType(html)).isEqualTo("text/html");
-				assertThat(contentAsString(html)).contains("og:title");
-				assertThat(contentAsString(html)).contains("od:description");
+				Assert.assertTrue(WS.url("http://localhost:3333").get().get().getBody().contains("og:description"));
 			}
 		});
-
-	}*/
+	}
 }

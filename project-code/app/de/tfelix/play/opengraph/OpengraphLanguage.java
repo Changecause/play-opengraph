@@ -15,12 +15,11 @@ import play.mvc.Http;
  */
 class OpengraphLanguage {
 
-	static final private String LANGUAGE_KEY = "facebook-lang";
+	static final private String LANGUAGE_KEY = "opg-facebook-lang";
 
 	static final private Pattern LANGUAGE_REGEX = Pattern.compile("fb_locale=(\\w{2}_\\w{2})");
 
-	private static String extractFacebookLanguageCode() {
-		Context ctx = Http.Context.current();
+	private static String extractFacebookLanguageCode(Context ctx) {
 
 		String langCode = ctx.request().getHeader("X-Facebook-Locale");
 		if (langCode != null && !langCode.isEmpty()) {
@@ -32,9 +31,11 @@ class OpengraphLanguage {
 		Matcher matcher = LANGUAGE_REGEX.matcher(ctx.request().uri());
 		while (matcher.find()) {
 			langCode = matcher.group(1);
-			Logger.debug("fb_locale found: " + langCode);
+			Logger.debug("?fb_locale found: " + langCode);
 			return langCode;
 		}
+		
+		// If nothing could be found, return empty string.
 		return "";
 	}
 
@@ -46,20 +47,39 @@ class OpengraphLanguage {
 	 * 
 	 * @return
 	 */
-	static Lang getLanguage() {
-		Context ctx = Http.Context.current();
-		if (!ctx.args.containsKey(LANGUAGE_KEY)) {
-			createLanguage();
+	static Lang getLanguage() {		
+		try {
+			Context ctx = Http.Context.current();
+			// Check if there is already a language in the cache for the current
+			// request. If so return this.
+			if (!ctx.args.containsKey(LANGUAGE_KEY)) {
+				createLanguage(ctx);
+			}
+			return ((LanguageStore) ctx.args.get(LANGUAGE_KEY)).playLanguage;
+		} catch(Throwable ex) {
+			// No Context available. Return default  language.
+			// Scala Lang mut be wrapped in Java Lang object to prevent type
+			// mismatch.
+			return new Lang(Lang.defaultLang());
 		}
-		return ((LanguageStore) ctx.args.get(LANGUAGE_KEY)).playLanguage;
+	}
+	
+	/**
+	 * Extracts a language code used by Facebook from the Play Lang object.
+	 * 
+	 * @param code
+	 * @return
+	 */
+	private static String getFacebookLangCode(Lang lang) {
+		return lang.code().replace('-', '_');
 	}
 
 	/**
-	 * Tries to detect the language requested by Facebook and saves it in a cache.
+	 * Tries to detect the language requested by Facebook and saves it in a cache bound 
+	 * to the HTTP.Context object.
 	 */
-	private static void createLanguage() {
-		Context ctx = Http.Context.current();
-		String facebookCode = extractFacebookLanguageCode();
+	private static void createLanguage(Context ctx) {
+		String facebookCode = extractFacebookLanguageCode(ctx);
 
 		// If no explicit language request by Facebook, so give the language
 		// dependent on the browser of the user.
@@ -74,8 +94,10 @@ class OpengraphLanguage {
 			language = Lang.forCode(facebookCode.split("_")[0]);
 		} else {
 			// When no language from Facebook is requested just deliver the
-			// default language of this website.
+			// default language of this website. Must be wrapped because
+			// defaultLang gets the Scala version. Convert it to Java wrapper.
 			language = new Lang(Lang.defaultLang());
+			facebookCode = getFacebookLangCode(language);
 		}
 
 		// Create storage.
@@ -88,25 +110,24 @@ class OpengraphLanguage {
 	}
 
 	/**
-	 * Returns the language code which was originally requested by Facebook or
-	 * null otherwise.
+	 * Returns the language code for the currently used language formatted for
+	 * Facebook.
 	 * 
 	 * @return
 	 */
-	static String getFacebookRequestCode() {
+	static String getFacebookLanguageCode() {
 		// Check if the request language code was already cached. If not create the
 		// cache.
-		Context ctx;
 		try {
-			ctx = Http.Context.current();
+			Context ctx = Http.Context.current();
+			if (!ctx.args.containsKey(LANGUAGE_KEY)) {
+				createLanguage(ctx);
+			}
+			return ((LanguageStore) ctx.args.get(LANGUAGE_KEY)).fbQueriedLanguage;
 		} catch(RuntimeException ex) {
-			// No Context aviable. Return null.
-			return null;
+			// No Context available. Return an empty string.
+			return "";
 		}
-		if (!ctx.args.containsKey(LANGUAGE_KEY)) {
-			createLanguage();
-		}
-		return ((LanguageStore) ctx.args.get(LANGUAGE_KEY)).fbQueriedLanguage;
 	}
 
 }

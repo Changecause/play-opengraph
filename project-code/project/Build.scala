@@ -5,7 +5,7 @@ import PlayProject._
 object ApplicationBuild extends Build {
 
     val appName         = "opengraph-module"
-    val appVersion      = "0.1.3-SNAPSHOT"
+    val appVersion      = "0.1.3"
 
     val appDependencies = Seq(
     	javaCore

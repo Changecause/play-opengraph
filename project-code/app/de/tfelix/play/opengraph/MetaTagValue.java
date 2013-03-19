@@ -8,8 +8,10 @@ import play.i18n.Messages;
  * Framework). Objects an be added as well to fill in placeholder in the
  * translation string as documented in
  * http://www.playframework.org/documentation/2.0.2/JavaI18N 
+ * It is internal because the user must not interact with the value directly.
+ * It will be used by the MetaTag class.
  */
-public class MetaTagValue {
+class MetaTagValue {
 
 	private String value;
 	private Object[] args = null;
@@ -35,15 +37,7 @@ public class MetaTagValue {
 
 	@Override
 	public String toString() {
-		Lang lang;
-		try {
-			lang = OpengraphLanguage.getLanguage();
-		} catch(RuntimeException ex) {
-			// Request was not aviable. Mostly because we are in testing environment.
-			// @TODO Look if this can not be handled by a advanced testcase rather then here in
-			// code.
-			lang = new Lang(Lang.defaultLang());
-		}
+		Lang lang = OpengraphLanguage.getLanguage();
 		
 		if (args == null) {
 			return Messages.get(lang, value);
