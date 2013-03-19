@@ -20,13 +20,14 @@ The complete Build.scala looks like this:
 object ApplicationBuild extends Build {
 
 	val appName = "opengraph-usage"
-	val appVersion = "0.1.1"
+	val appVersion      = "1.0-SNAPSHOT"
 
-	val appDependencies = Seq( 
-		"de.tfelix"				%% "opengraph-module"			% "0.1.1"
-	)
+	 val appDependencies = Seq(
+      javaCore,
+	  "de.tfelix"             %% "opengraph-module"           % "0.1.3-SNAPSHOT"
+    )
 
-	val main = PlayProject(appName, appVersion, appDependencies, mainLang = JAVA).settings(
+	val main = play.Project(appName, appVersion, appDependencies).settings(
 		// Add your own project settings here
 		resolvers += Resolver.url("Opengraph-Module Play Repository", url("http://tfelix.github.com/play-opengraph/releases/"))(Resolver.ivyStylePatterns),
 		checksums := Nil 
@@ -48,18 +49,20 @@ There are two kind of meta tags which can be used:
 * Page specific Metatags
 
 The permanent tags will be included on ALL pages. This can be handy for tags like the app_id which will not change.
-The page specific metatags will just be included if a visitor requests this very page. The page will by determined by looking to the route which is currently requested.
-It is recomended to fill up all used tags when the app starts. To do this one can add a Global.java file with a onStart handler.
+The page specific metatags will just be included if a visitor requests this very page. The page will be determined by looking to the route which is currently requested.
+It is recomended to configure all tags when the app starts. To do this one can add a Global.java file with a onStart handler.
 Inside this onStart method you define permanent tags like so:
 
 ```java
 Opengraph.insertPermanentTag(new MetaTag("og:site_name", config.getString("facebook.site_name")));
 ```
 
-And page specific tags like the following:
+Page specific tags must be first added to a `MetaTagSet`. This agregates all tags which belong to a single page. To add them seperatly was removed because of performance concerns. So first create a `MetaTagSet` and add all tags to this object. Include the `MetaTagSet` afterwards to the `Opengraph` object like so:
 
 ```java
-Opengraph.insertTag("/quotes/view", new MetaTag("og:title", "facebook.quoteTitle"));
+MetaTagSet mts = new MetaTagSet();
+mts.add(new MetaTag("og:title", "facebook.quoteTitle"));
+Opengraph.insertTag("/quotes/view", );
 ```
 
 This tag will be added just when visiting the /quotes/view URL.

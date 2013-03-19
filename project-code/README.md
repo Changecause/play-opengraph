@@ -3,6 +3,11 @@ Changelog
 
 ## Changelog ##
 
+### 0.1.3 ###
+ * Overworked the API.
+ 	* Tags must be added via a MetaTagSet object. This was done to improve lookup performance.
+ * Facebook language detection should be more robust. When no language from Facebook is requested the plugin does a fallback to the users default browser language. 
+
 ### 0.1.2 ###
  * When adding a MetaTagSet to another tags are now checked if they are allowed multiple times. If yes they are added, if not the old ones will be overwritten.
 
