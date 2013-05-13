@@ -13,8 +13,7 @@ object ApplicationBuild extends Build {
 
     val main = play.Project(appName, appVersion, appDependencies).settings(
     	organization := "de.tfelix",
-		javacOptions ++= Seq("-target", "1.6") ++ Seq("-source", "1.6"),
-		publishTo := Some(Resolver.file("file",  new File( "C:/test" )) )
+		javacOptions ++= Seq("-target", "1.6") ++ Seq("-source", "1.6")
     )
 
 }
